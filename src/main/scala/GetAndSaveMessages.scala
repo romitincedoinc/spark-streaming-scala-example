@@ -1,14 +1,12 @@
-import java.sql.{Timestamp, Time}
 import java.util.Properties
 
-import com.datastax.spark.connector.SomeColumns
-import com.datastax.spark.connector._
-import kafka.producer.{KeyedMessage, ProducerConfig, Producer}
-import kafka.serializer.{StringDecoder, DefaultDecoder}
+import com.datastax.spark.connector.{SomeColumns, _}
+import kafka.producer.{KeyedMessage, Producer, ProducerConfig}
+import kafka.serializer.StringDecoder
 import org.apache.spark._
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.streaming.{Duration, StreamingContext}
 import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.streaming.{Duration, StreamingContext}
 
 
 object GetAndSaveMessages {
@@ -57,22 +55,30 @@ object GetAndSaveMessages {
       )
 
     //Processing DStream
-    stream.foreachRDD(rdd => {
+    stream
+      .foreachRDD(rdd => {
       rdd.flatMap(line => {
         val columns = line._2.split("-")
         val message_id = columns(0).toInt
         val message = columns(1)
         val username = columns(2)
-        Some(message_id,message ,username)
-      }).saveToCassandra(keyspaceName,tableName,SomeColumns("id", "message", "username" ))
-      rdd.map(line =>(line._2.split("-")(2),1))
-        .reduceByKey(_+_)
-        .foreach(v => {
-        val kafkaProducer = new Producer[String, String](new ProducerConfig(props))
-        kafkaProducer.send(new KeyedMessage[String, String](outputKafkaTopic,v._1+"-"+v._2))
+        Some(message_id, message, username)
       }
       )
-    })
+      //Saving parsed messages to Cassandra
+      .saveToCassandra(keyspaceName, tableName, SomeColumns("id", "message", "username"))
+
+      //Producing new messages to Kafka (username-messageCount)
+      rdd.map(line =>
+        (line._2.split("-")(2), 1))
+        .reduceByKey(_ + _)
+        .foreach(v => {
+          val kafkaProducer = new Producer[String, String](new ProducerConfig(props))
+          kafkaProducer.send(new KeyedMessage[String, String](outputKafkaTopic, v._1 + "-" + v._2))
+        }
+        )
+      }
+      )
 
     ssc.start()
     ssc.awaitTermination()

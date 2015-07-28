@@ -1,19 +1,10 @@
-import java.sql.{Timestamp, Time}
-import java.util.Properties
-
-import com.datastax.spark.connector.SomeColumns
-import com.datastax.spark.connector._
-import kafka.producer.{KeyedMessage, ProducerConfig, Producer}
-import kafka.serializer.{StringDecoder, DefaultDecoder}
+import com.datastax.spark.connector.{SomeColumns, _}
+import kafka.serializer.StringDecoder
 import org.apache.spark._
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.streaming.{Duration, StreamingContext}
 import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.streaming.{Duration, StreamingContext}
 
-/*
-Récupère le nombre de tweets par user sous forme de message depuis Kafka / twitter-out
-Sauvegarde ce compteur dans Cassandra
-*/
 object GetAndSaveMessageCountByUser {
   def main(args: Array[String]): Unit = {
 
@@ -51,13 +42,16 @@ object GetAndSaveMessageCountByUser {
       )
 
     //Processing DStream
-    stream.foreachRDD(rdd => {
+    stream
+      .foreachRDD(rdd => {
       rdd.flatMap(line => {
         val columns = line._2.split("-")
         val username = columns(0)
         val currentCount = columns(1).toInt
-        Some(username,currentCount)
-      }).saveToCassandra(keyspaceName,tableName,SomeColumns("username", "message_count"))
+        Some(username, currentCount)
+      }
+      )
+      .saveToCassandra(keyspaceName, tableName, SomeColumns("username", "message_count"))
     })
 
     ssc.start()
