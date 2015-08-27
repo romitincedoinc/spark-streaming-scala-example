@@ -14,11 +14,11 @@ class SparkStreamingJob {
   val sparkConf = new SparkConf()
     .setAppName("sparkMessageCount")
     .setMaster("local[2]")
+  sparkConf.set("spark.cassandra.connection.host", "cassandra-node-1")
   val sparkTimeInterval = new Duration(10000)
   val ssc = new StreamingContext(sparkConf, sparkTimeInterval)
 
   //CASSANDRA configuration
-  sparkConf.set("spark.cassandra.connection.host", "cassandra-node-1")
   val keyspaceName = "dev"
   val messageTableName = "messages"
   val messageCountTableName = "message_count_by_user"
