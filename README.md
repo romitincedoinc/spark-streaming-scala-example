@@ -23,7 +23,7 @@ Assuming your Cassandra Cluster has been built up by * ansible-kafka-cassandra-c
 ```
 vagrant ssh cassandra-node-1
 
-/etc/dsc-cassandra-2.2.0/bin/cqlsh 192.168.5.108
+/etc/dsc-cassandra-2.2.0/bin/cqlsh cassandra-node-1
 ```
 
 Then create a keyspace and the tables to persist your data.
@@ -82,7 +82,7 @@ ssh to whatever cassandra node you want and
 ```
 vagrant ssh cassandra-node-1
 
-/etc/dsc-cassandra-2.2.0/bin/cqlsh 192.168.5.108
+/etc/dsc-cassandra-2.2.0/bin/cqlsh cassandra-node-1
 ```
 
 ```

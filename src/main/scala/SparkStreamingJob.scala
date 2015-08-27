@@ -24,7 +24,7 @@ class SparkStreamingJob {
   val messageCountTableName = "message_count_by_user"
 
   //KAFKA Configuration
-  val brokers = "kafka-node-1:9092,kafka-node-2:9093,kafka-node-3:9094"
+  val brokers = "kafka-node-1:9092"
   val kafkaParams = Map(
     "zookeeper.connect" -> "zk-node-1:2181",
     "metadata.broker.list" -> brokers,
